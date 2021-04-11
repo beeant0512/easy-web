@@ -7,9 +7,10 @@ import { login } from '@/services/authroity';
 
 export default function Page() {
   const [countDown, setCountDown] = useState(60);
+  const [cacheId, setCacheId] = useState();
 
   const getCountDown = async (value: String) => {
-    const response = await getCaptchaStatus({ phone: value });
+    const response = await getCaptchaStatus({ username: value });
     setCountDown(response.data);
   };
 
@@ -18,7 +19,7 @@ export default function Page() {
       <Col xs={24} sm={12} md={6} xxl={4}>
         <ProForm
           onFinish={async (values) => {
-            const response = await login(values);
+            const response = await login({...values, "cache_id": cacheId});
             console.log(response);
           }}
           submitter={{
@@ -62,11 +63,11 @@ export default function Page() {
             fieldProps={{
               size: 'large',
               prefix: <MobileTwoTone />,
-              onChange: (e) => {
-                getCountDown(e.target.value);
+              onBlur: (e) => {
+                getCountDown(e.target.value).then();
               },
             }}
-            name="phone"
+            name="username"
             placeholder="请输入手机号"
             rules={[
               {
@@ -88,7 +89,7 @@ export default function Page() {
             captchaProps={{
               size: 'large',
             }}
-            phoneName="phone"
+            phoneName="username"
             name="captcha"
             rules={[
               {
@@ -97,10 +98,12 @@ export default function Page() {
               },
             ]}
             placeholder="请输入验证码"
-            onGetCaptcha={async (phone) => {
-              const response = await sendCaptcha({ phone });
+            onGetCaptcha={async (username) => {
+              const response = await sendCaptcha({ username });
               if (response.success === false) {
                 throw new Error('获取验证码错误');
+              } else {
+                setCacheId(response.data);
               }
             }}
           />
